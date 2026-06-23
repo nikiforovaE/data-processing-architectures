@@ -1,0 +1,82 @@
+services:
+  kafka:
+    image: 'bitnamilegacy/kafka:3.3.2'
+    container_name: kafka_server
+    ports:
+      - "9092:9092" # Внутренняя шина (Kafka <-> Spark)
+      - "9094:9094" # Внешний вход (Python-скрипты снаружи <-> Kafka)
+    networks:
+      - network
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_KRAFT_CLUSTER_ID=L0ZEQh1yTbGhNNUE7-6wSQ
+
+  kafka-ui:
+    image: 'provectuslabs/kafka-ui:v0.7.2'
+    container_name: kafka_ui
+    ports:
+      - "8080:8080" # графический интерфейс
+    networks:
+      - network
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=kafka_cluster
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+    depends_on:
+      - kafka
+
+  spark-master:
+    image: 'apache/spark:4.1.2'
+    container_name: spark-master
+    hostname: spark-master
+    command: [ "/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master", "--host", "spark-master" ]
+    ports:
+      - "8181:8080" # Spark Web UI (http://localhost:8181)
+      - "7077:7077" # Порт для отправки задач
+    networks:
+      - network
+    volumes:
+      - ./apps:/opt/spark-apps
+      - ./data:/opt/spark-data
+      - ./warehouse:/opt/spark-warehouse
+
+  spark-worker1:
+    image: 'apache/spark:4.1.2'
+    container_name: spark-worker1
+    depends_on:
+      - spark-master
+    command: [ "/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077" ]
+    networks:
+      - network
+    volumes:
+      - ./apps:/opt/spark-apps
+      - ./data:/opt/spark-data
+      - ./warehouse:/opt/spark-warehouse
+
+  postgres:
+    image: 'postgres:15-alpine'
+    container_name: serving_db
+    ports:
+      - "5432:5432" # Порт для подключения вашей Java-программы к БД (localhost:5432)
+    networks:
+      - network
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=serving_layer
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+networks:
+  network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -12,6 +12,52 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spark.version>4.1.1</spark.version>
+        <scala.compat.version>2.13</scala.compat.version>
     </properties>
-    
+
+    <dependencies>
+        <!-- Apache Spark Core (Scala 2.13) -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!-- Apache Spark SQL (Scala 2.13) -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!-- Spark SQL Kafka Integration (Scala 2.13) -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql-kafka-0-10_${scala.compat.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!-- Delta Lake Core (Совместимый со Spark 4.1) -->
+        <dependency>
+            <groupId>io.delta</groupId>
+            <artifactId>delta-spark_4.1_2.13</artifactId> <!-- Изменился Artifact ID -->
+            <version>4.1.0</version>                       <!-- Изменилась версия -->
+        </dependency>
+
+        <!-- Kafka Client -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+
+        <!-- PostgreSQL JDBC Driver -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.6.0</version>
+        </dependency>
+    </dependencies>
+
 </project>
