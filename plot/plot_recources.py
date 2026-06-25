@@ -56,11 +56,11 @@ def parse_io_to_mb(io_str):
 
 
 def process_and_plot():
-    csv_path = '../data/plots/resource_stats.csv'
+    csv_path = '../data/resource_stats.csv'
     output_dir = '../data/plots'
 
     if not os.path.exists(csv_path):
-        csv_path = 'data/plots/resource_stats.csv'
+        csv_path = 'data/resource_stats.csv'
         output_dir = 'data/plots'
 
     if not os.path.exists(csv_path):

@@ -2,7 +2,7 @@
 
 mkdir -p data/plots
 
-RESOURCE_LOG="data/plots/resource_stats.csv"
+RESOURCE_LOG="data/resource_stats.csv"
 if [ ! -f "$RESOURCE_LOG" ]; then
     echo "Architecture,DatasetSize,Container,CPU,MEM,BlockIO" > "$RESOURCE_LOG"
 fi
