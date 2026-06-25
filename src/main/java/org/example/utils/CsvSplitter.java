@@ -8,10 +8,17 @@ import java.nio.file.Paths;
 
 public class CsvSplitter {
     public static void main(String[] args) {
+        double targetSizeMB = 3 * 1024;
 
         String sourcePath = "data/2019-Oct.csv";
         String historyPath = "data/history-oct.csv";
         String streamPath = "data/stream-oct.csv";
+
+        if (targetSizeMB > 0) {
+            String suffix = "_" + (int) targetSizeMB + "M";
+            historyPath = "data/history-oct" + suffix + ".csv";
+            streamPath = "data/stream-oct" + suffix + ".csv";
+        }
 
         double splitRatio = 0.8;
 
@@ -19,41 +26,45 @@ public class CsvSplitter {
             System.out.println("Начало работы с файлом: " + sourcePath);
             long startTime = System.currentTimeMillis();
 
-            long totalLines = 0;
-            try (BufferedReader reader = Files.newBufferedReader(Paths.get(sourcePath))) {
-                while (reader.readLine() != null) {
-                    totalLines++;
-                }
+            long targetSizeBytes;
+            if (targetSizeMB > 0) {
+                targetSizeBytes = (long) (targetSizeMB * 1024 * 1024);
+                System.out.println("Целевой размер нарезки: " + targetSizeMB + " МБ");
+            } else {
+                targetSizeBytes = Files.size(Paths.get(sourcePath));
+                System.out.println("Обрабатываем весь файл целиком. Общий размер: " + (targetSizeBytes / (1024.0 * 1024.0)) + " МБ");
             }
 
-            if (totalLines <= 1) {
-                System.err.println("Файл пуст или содержит только заголовок.");
-                return;
-            }
-
-            long dataLines = totalLines - 1;
-            long historyLimit = (long) (dataLines * splitRatio);
-
-            System.out.println("Всего строк данных: " + dataLines);
-            System.out.println("Будет записано в историю: " + historyLimit);
-            System.out.println("Будет записано в поток: " + (dataLines - historyLimit));
+            long historyLimitBytes = (long) (targetSizeBytes * splitRatio);
 
             try (BufferedReader reader = Files.newBufferedReader(Paths.get(sourcePath));
                  BufferedWriter historyWriter = Files.newBufferedWriter(Paths.get(historyPath));
                  BufferedWriter streamWriter = Files.newBufferedWriter(Paths.get(streamPath))) {
 
                 String header = reader.readLine();
+                if (header == null) {
+                    System.err.println("Файл пуст.");
+                    return;
+                }
                 historyWriter.write(header);
                 historyWriter.newLine();
                 streamWriter.write(header);
                 streamWriter.newLine();
 
                 String line;
-                long currentLineCount = 0;
+                long processedBytes = 0;
+                long linesCount = 0;
 
                 while ((line = reader.readLine()) != null) {
-                    currentLineCount++;
-                    if (currentLineCount <= historyLimit) {
+                    long lineBytes = line.length() + 1;
+                    processedBytes += lineBytes;
+                    linesCount++;
+
+                    if (processedBytes > targetSizeBytes) {
+                        break;
+                    }
+
+                    if (processedBytes <= historyLimitBytes) {
                         historyWriter.write(line);
                         historyWriter.newLine();
                     } else {
@@ -61,11 +72,15 @@ public class CsvSplitter {
                         streamWriter.newLine();
                     }
 
-                    if (currentLineCount % 1000000 == 0) {
-                        System.out.println("Обработано строк: " + currentLineCount);
+                    if (linesCount % 1000000 == 0) {
+                        System.out.printf("Обработано строк: %d (~%.2f МБ)%n",
+                                linesCount, processedBytes / (1024.0 * 1024.0));
                     }
                 }
             }
+
+            long duration = (System.currentTimeMillis() - startTime) / 1000;
+            System.out.println("Разделение успешно завершено за " + duration + " сек.!");
 
         } catch (IOException e) {
             System.err.println("Ошибка при работе с файлами: " + e.getMessage());

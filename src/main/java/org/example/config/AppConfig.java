@@ -1,8 +1,9 @@
 package org.example.config;
 
 public class AppConfig {
-    // Центральный переключатель: "Small" (December, 415MB) или "Large" (October, 5.7GB)
-    public static final String DATASET_SIZE = "Large";
+    // Центральный переключатель масштаба данных:
+    // "Small" (415 MB), "Medium-1" (1.5 GB), "Medium-2" (3.0 GB), "Large" (5.7 GB)
+    public static final String DATASET_SIZE = "Medium-1";
 
     public static final String KAFKA_SERVERS = "localhost:9094";
     public static final String KAFKA_TOPIC = "ecommerce-events";
@@ -11,10 +12,30 @@ public class AppConfig {
     public static final String DB_PASSWORD = "postgres";
 
     public static String getHistoryPath() {
-        return DATASET_SIZE.equalsIgnoreCase("Large") ? "data/history-oct.csv" : "data/history-dec.csv";
+        switch (DATASET_SIZE.toUpperCase()) {
+            case "SMALL":
+                return "data/history-dec.csv";
+            case "MEDIUM-1":
+                return "data/history-oct_1536M.csv";
+            case "MEDIUM-2":
+                return "data/history-oct_3072M.csv";
+            case "LARGE":
+            default:
+                return "data/history-oct.csv";
+        }
     }
 
     public static String getStreamPath() {
-        return DATASET_SIZE.equalsIgnoreCase("Large") ? "data/stream-oct.csv" : "data/stream-dec.csv";
+        switch (DATASET_SIZE.toUpperCase()) {
+            case "SMALL":
+                return "data/stream-dec.csv";
+            case "MEDIUM-1":
+                return "data/stream-oct_1536M.csv";
+            case "MEDIUM-2":
+                return "data/stream-oct_3072M.csv";
+            case "LARGE":
+            default:
+                return "data/stream-oct.csv";
+        }
     }
 }
