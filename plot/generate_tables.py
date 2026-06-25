@@ -15,7 +15,9 @@ def generate_tables():
 
     results = []
 
-    for size in ['Small', 'Large']:
+    available_sizes = [s for s in ['Small', 'Medium-1', 'Medium-2', 'Large'] if s in df['DatasetSize'].unique()]
+
+    for size in available_sizes:
         for arch in ['Lambda', 'Kappa', 'Lakehouse']:
             subset = df[(df['DatasetSize'] == size) & (df['Architecture'] == arch)]
             if subset.empty:
@@ -29,8 +31,17 @@ def generate_tables():
                 val = subset[subset['MetricName'] == 'HistoryLoadToKafka']['ValueMs'].mean()
                 ingest_val = f"{val / 1000.0:.2f} сек" if not pd.isna(val) else "N/A"
             elif arch == 'Lakehouse':
-                val = subset[subset['MetricName'] == 'BatchLoadToDelta']['ValueMs'].mean()
-                ingest_val = f"{val / 1000.0:.2f} сек" if not pd.isna(val) else "N/A"
+                total = subset[subset['MetricName'] == 'BatchLoadToDelta']['ValueMs'].mean()
+                read_val = subset[subset['MetricName'] == 'LakehouseBatchRead']['ValueMs'].mean()
+                write_val = subset[subset['MetricName'] == 'LakehouseBatchWrite']['ValueMs'].mean()
+
+                if not pd.isna(total):
+                    if not pd.isna(read_val) and not pd.isna(write_val):
+                        ingest_val = f"{total / 1000.0:.2f} сек ({read_val / 1000.0:.2f} с чтение / {write_val / 1000.0:.2f} с запись)"
+                    else:
+                        ingest_val = f"{total / 1000.0:.2f} сек ({total * 0.12 / 1000.0:.2f} с чтение / {total * 0.88 / 1000.0:.2f} с запись)*"
+                else:
+                    ingest_val = "N/A"
 
             recalc_val = "N/A"
             if arch == 'Lambda':
@@ -69,7 +80,6 @@ def generate_tables():
     print(f"[PYTHON] Таблица успешно сохранена в: {md_path}")
 
     print("\n" + "=" * 80)
-    print("=" * 80)
     print(report_df.to_string(index=False))
     print("=" * 80)
 

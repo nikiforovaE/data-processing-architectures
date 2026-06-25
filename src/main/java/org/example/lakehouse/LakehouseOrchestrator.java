@@ -40,10 +40,7 @@ public class LakehouseOrchestrator {
 
         try {
             System.out.println("[SYSTEM] [LAKEHOUSE] Пакетная загрузка истории...");
-            long batchStart = System.currentTimeMillis();
             LakehouseBatchLoader.run(spark, AppConfig.getHistoryPath(), DELTA_TABLE_PATH);
-            long batchDuration = System.currentTimeMillis() - batchStart;
-            BenchmarkLogger.log("Lakehouse", "BatchLoadToDelta", batchDuration);
 
             System.out.println("[SYSTEM] [LAKEHOUSE] Запуск стриминга в Delta...");
             StreamingQuery lakehouseQuery = LakehouseStreamingPipeline.run(spark);
