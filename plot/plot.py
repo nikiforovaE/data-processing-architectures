@@ -31,19 +31,19 @@ def plot_all_benchmarks():
 
     for s in sizes:
         l_val = avg_df[(avg_df['DatasetSize'] == s) & (avg_df['Architecture'] == 'Lambda') & (
-                    avg_df['MetricName'] == 'BatchExecution')]['ValueSec'].mean()
+                avg_df['MetricName'] == 'BatchExecution')]['ValueSec'].mean()
         lambda_vals.append(l_val if not pd.isna(l_val) else 0.0)
 
         k_val = avg_df[(avg_df['DatasetSize'] == s) & (avg_df['Architecture'] == 'Kappa') & (
-                    avg_df['MetricName'] == 'HistoryLoadToKafka')]['ValueSec'].mean()
+                avg_df['MetricName'] == 'HistoryLoadToKafka')]['ValueSec'].mean()
         kappa_vals.append(k_val if not pd.isna(k_val) else 0.0)
 
         r_val = avg_df[(avg_df['DatasetSize'] == s) & (avg_df['Architecture'] == 'Lakehouse') & (
-                    avg_df['MetricName'] == 'LakehouseBatchRead')]['ValueSec'].mean()
+                avg_df['MetricName'] == 'LakehouseBatchRead')]['ValueSec'].mean()
         w_val = avg_df[(avg_df['DatasetSize'] == s) & (avg_df['Architecture'] == 'Lakehouse') & (
-                    avg_df['MetricName'] == 'LakehouseBatchWrite')]['ValueSec'].mean()
+                avg_df['MetricName'] == 'LakehouseBatchWrite')]['ValueSec'].mean()
         total_val = avg_df[(avg_df['DatasetSize'] == s) & (avg_df['Architecture'] == 'Lakehouse') & (
-                    avg_df['MetricName'] == 'BatchLoadToDelta')]['ValueSec'].mean()
+                avg_df['MetricName'] == 'BatchLoadToDelta')]['ValueSec'].mean()
 
         if pd.isna(r_val) or pd.isna(w_val):
             if not pd.isna(total_val):
